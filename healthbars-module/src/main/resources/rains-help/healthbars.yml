@@ -1,0 +1,50 @@
+id: healthbars
+title: Health bars
+summary: A line of health under players' names and over hurt mobs — switched on or off by you, for you.
+intro: |
+  Wondering how close that zombie is to dying? Or how close <i>you</i> are, for that matter? Health bars answer that without the guesswork — and they are yours to switch.
+icon: RED_DYE
+category: Looks & cosmetics
+order: 40
+module: healthbars
+aliases: [hp, health, hearts, healthbar, lifebar]
+keywords: [life, damage, mob, nametag, bar, style, percent]
+commands: [healthbars]
+sections:
+  - question: What are health bars?
+    title: What they are
+    text: |
+      A small line of text that floats right above a head and shows how much health is left. It is green while more than half is left, yellow below half, and red below a quarter.
+      {if:healthbars:players}You see it under the name of other players.{/if}{if:healthbars:players && healthbars:mobs} {/if}{if:healthbars:mobs}You also see it over mobs that are hurt.{/if}
+      {if:!healthbars:players && !healthbars:mobs}Right now the owner has both kinds switched off, so there is nothing to see. Ah well.{/if}
+  - question: How do I switch them on or off?
+    title: On and off
+    text: |
+      Type {run:/healthbars} (or the short {run:/hp}) and they flip. Prefer being explicit? {cmd:/healthbars on}, {cmd:/healthbars off} — and {cmd:/healthbars status} tells you which it is right now.
+      It is purely your own choice: nobody else sees your switch, and it follows you across the network.
+      {if:healthbars:on-by-default}Until you choose, they are <green>on</green> for you.{else}Until you choose, they are <red>off</red> for you — type {cmd:/healthbars on} to see them.{/if}
+  - question: Hearts or a bar?
+    title: Two styles
+    text: |
+      There are two looks. <white>Hearts</white> shows a heart and the number of health points, like <red>❤</red> <green>20</green>. <white>Bar</white> shows ten blocks and the percent left.
+      {cmd:/healthbars style} flips between them, or name one: {cmd:/healthbars style hearts}, {cmd:/healthbars style bar}. I show you an example as soon as you change it.
+      Until you pick, you get <white>{setting:healthbars:default-style}</white>.
+  - question: Over which mobs do I see one?
+    title: Mobs
+    when: healthbars:mobs
+    text: |
+      Only over mobs that are <i>hurt</i> — a mob at full health that nobody touched has none, otherwise every cow in sight would wear a sign.
+      The bar appears with the first hit and stays for {setting:healthbars:mob-seconds|seconds} after the last hit, even if the mob heals to full. Then it goes away. When the mob dies, it goes with it.
+  - question: How far away do they show?
+    title: Distance
+    text: |
+      Bars are shown up to {setting:healthbars:range|count} blocks away, and only in the same world as you. Further than that they simply are not drawn for you.
+  - question: Why can't I see somebody's bar?
+    title: Missing bars
+    text: |
+      A bar never tells more than the wearer does. You see none when:
+      <white>•</white> you switched them off ({cmd:/healthbars status} tells you),
+      <white>•</white> they are further away than {setting:healthbars:range|count} blocks or in another world,
+      <white>•</white> they are invisible — a potion of invisibility hides the bar too,
+      <white>•</white> they are hidden from you in some other way (staff in vanish, for instance), or are in spectator mode,
+      <white>•</white> it is your own — you never see a bar over yourself.

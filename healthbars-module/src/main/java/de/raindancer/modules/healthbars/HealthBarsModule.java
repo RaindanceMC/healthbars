@@ -17,7 +17,7 @@ import java.util.List;
  */
 public final class HealthBarsModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("healthbars", "Health Bars", "0.1.2")
+    private static final ModuleInfo INFO = ModuleInfo.of("healthbars", "Health Bars", "0.2.0")
             .describedAs("Health under players' names and over hurt mobs; each player switches it for themselves")
             .by("Raindancer118");
 
