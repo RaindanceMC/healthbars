@@ -58,4 +58,12 @@ class HealthTextRuleTest {
         assertThat(rule.mobShown(20, 20, 90_000, 100_000, 15)).as("hit ten seconds ago, healed").isTrue();
         assertThat(rule.mobShown(20, 20, 80_000, 100_000, 15)).isFalse();
     }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("only hearts and bar are styles; anything else is reported, not silently hearts")
+    void knownStyles() {
+        assertThat(HealthStyle.isKnown("Bar")).isTrue();
+        assertThat(HealthStyle.isKnown("rainbow")).isFalse();
+        assertThat(HealthStyle.isKnown(null)).isFalse();
+    }
 }

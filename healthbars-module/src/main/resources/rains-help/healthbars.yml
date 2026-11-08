@@ -33,8 +33,8 @@ sections:
     title: Mobs
     when: healthbars:mobs
     text: |
-      Only over mobs that are <i>hurt</i> — a mob at full health that nobody touched has none, otherwise every cow in sight would wear a sign.
-      The bar appears with the first hit and stays for {setting:healthbars:mob-seconds|seconds} after the last hit, even if the mob heals to full. Then it goes away. When the mob dies, it goes with it.
+      Only over mobs that a <i>player hit</i> — a mob at full health that nobody touched has none, otherwise every cow in sight would wear a sign.
+      The bar appears with the first hit and stays for {setting:healthbars:mob-seconds|seconds} after the last hit, even if the mob heals to full. Then it goes away. In a crowd (a mob farm, say) only the first few hit mobs per chunk get one. When the mob dies, it goes with it.
   - question: How far away do they show?
     title: Distance
     text: |

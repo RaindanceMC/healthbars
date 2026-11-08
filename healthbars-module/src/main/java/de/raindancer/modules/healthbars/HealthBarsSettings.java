@@ -40,11 +40,17 @@ public record HealthBarsSettings(
         @Key("mob-seconds")
         int mobSeconds,
 
+        @In("healthbars") @Title("Mob bars per chunk") @Range(min = 1, max = 64)
+        @Describe("At most this many hit mobs wear a bar in one chunk at a time — a mob farm does not fill the "
+                + "world with floating text.")
+        @Key("mob-cap")
+        int mobCap,
+
         @In("healthbars") @Title("Style for somebody who never chose")
         @Describe("HEARTS: a heart and the health. BAR: a line and the percent. Each player picks their own "
                 + "with /healthbars style.")
         @Key("default-style")
         HealthStyle defaultStyle) {
 
-    public static final HealthBarsSettings DEFAULTS = new HealthBarsSettings(true, true, true, 32, 15, HealthStyle.HEARTS);
+    public static final HealthBarsSettings DEFAULTS = new HealthBarsSettings(true, true, true, 32, 15, 8, HealthStyle.HEARTS);
 }

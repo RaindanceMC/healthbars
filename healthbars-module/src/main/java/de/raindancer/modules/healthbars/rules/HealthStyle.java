@@ -10,6 +10,10 @@ public enum HealthStyle {
         return name().toLowerCase(Locale.ROOT);
     }
 
+    public static boolean isKnown(String key) {
+        return key != null && java.util.Arrays.stream(values()).anyMatch(style -> style.name().equalsIgnoreCase(key.strip()));
+    }
+
     public static HealthStyle of(String key) {
         if (key != null) {
             for (HealthStyle style : values()) {

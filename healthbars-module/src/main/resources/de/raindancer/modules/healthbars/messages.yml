@@ -7,3 +7,4 @@ healthbars:
   status-on: "<gray>You see health bars."
   status-off: "<gray>Health bars are hidden for you."
   style: "<gray>Health bars look like this for you now: <example>"
+  unknown-style: "<red>There is no style called <given>. <gray>Pick <white>hearts<gray> or <white>bar<gray>: /healthbars style hearts"

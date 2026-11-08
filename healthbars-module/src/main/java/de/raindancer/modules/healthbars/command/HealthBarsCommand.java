@@ -32,6 +32,10 @@ public final class HealthBarsCommand implements BasicCommand {
         }
         String wanted = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
         if (wanted.equals("style")) {
+            if (args.length > 1 && !HealthStyle.isKnown(args[1])) {
+                live.messages().send(sender, "healthbars.unknown-style", "given", args[1]);
+                return;
+            }
             HealthStyle style = args.length > 1 ? HealthStyle.of(args[1]) : live.bars().style(player) == HealthStyle.HEARTS
                     ? HealthStyle.BAR : HealthStyle.HEARTS;
             live.bars().style(player, style);

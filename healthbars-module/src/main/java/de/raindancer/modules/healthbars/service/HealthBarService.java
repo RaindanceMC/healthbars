@@ -5,6 +5,9 @@ import de.raindancer.core.moderation.vanish.Vanish;
 import de.raindancer.core.ui.profile.PlayerSwitch;
 import de.raindancer.modules.healthbars.HealthBarsSettings;
 import de.raindancer.modules.healthbars.rules.HealthStyle;
+import de.raindancer.modules.healthbars.model.BarGrid;
+import de.raindancer.modules.healthbars.model.MobBarCap;
+import de.raindancer.modules.healthbars.model.Spot;
 import de.raindancer.modules.healthbars.rules.HealthTextRule;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -23,7 +26,10 @@ import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -57,7 +63,15 @@ public final class HealthBarService {
     /** The styles of everybody online who wants bars — only those are drawn. */
     private volatile Set<HealthStyle> inUse = EnumSet.noneOf(HealthStyle.class);
     private final Map<UUID, Long> lastHit = new ConcurrentHashMap<>();
+    /** Where each wearer's bars were last put: a wearer standing still gets no teleport. */
+    private final Map<UUID, Spot> spots = new ConcurrentHashMap<>();
+    /** What each viewer was shown last round, so only those and the bars nearby are looked at. */
+    private final Map<UUID, Set<TextDisplay>> shown = new ConcurrentHashMap<>();
+    private final MobBarCap cap = new MobBarCap();
     private long follows;
+
+    private record Bar(UUID wearer, HealthStyle style, TextDisplay display) {
+    }
 
     public HealthBarService(Plugin plugin, Supplier<HealthBarsSettings> settings, Vanish vanish) {
         this.plugin = plugin;
@@ -79,10 +93,21 @@ public final class HealthBarService {
         player.getPersistentDataContainer().set(STYLE, PersistentDataType.STRING, style.key());
     }
 
+    /** A player hit this mob: it wears a bar for a while, unless its area already holds as many as allowed. */
     public void hit(LivingEntity mob) {
-        if (!(mob instanceof Player) && settings.get().mobs()) {
+        if (mob instanceof Player || !settings.get().mobs()) {
+            return;
+        }
+        Location at = mob.getLocation();
+        String area = at.getWorld().getUID() + ":" + (at.getBlockX() >> 4) + ":" + (at.getBlockZ() >> 4);
+        if (cap.claim(mob.getUniqueId(), area, settings.get().mobCap())) {
             lastHit.put(mob.getUniqueId(), System.currentTimeMillis());
         }
+    }
+
+    private void unhit(UUID id) {
+        lastHit.remove(id);
+        cap.release(id);
     }
 
     /** On the global thread: every bar follows its wearer on the wearer's own thread. */
@@ -109,8 +134,16 @@ public final class HealthBarService {
                 }
             }
             inUse = styles;
+            double range = live.range();
+            BarGrid<Bar> grid = new BarGrid<>(range);
+            bars.forEach((wearer, mine) -> {
+                Spot at = spots.get(wearer);
+                if (at != null) {
+                    mine.forEach((style, display) -> grid.add(at.world(), at.x(), at.z(), new Bar(wearer, style, display)));
+                }
+            });
             for (Player viewer : Bukkit.getOnlinePlayers()) {
-                Scheduling.entity(plugin, viewer, () -> sight(viewer));
+                Scheduling.entity(plugin, viewer, () -> sight(viewer, grid));
             }
         }
     }
@@ -134,12 +167,14 @@ public final class HealthBarService {
         if (!wanted(wearer)) {
             remove(id);
             if (!(wearer instanceof Player)) {
-                lastHit.remove(id);
+                unhit(id);
             }
             return;
         }
         Location at = wearer.getLocation().add(0, wearer.getHeight()
                 + (wearer instanceof Player ? ABOVE_A_PLAYERS_HEAD : ABOVE_HEAD), 0);
+        Spot before = spots.get(id);
+        boolean still = before != null && before.sameAs(at.getWorld().getUID(), at.getX(), at.getY(), at.getZ());
         Map<HealthStyle, TextDisplay> mine = bars.computeIfAbsent(id, key -> new ConcurrentHashMap<>());
         Map<HealthStyle, String> written = drawn.computeIfAbsent(id, key -> new ConcurrentHashMap<>());
         AttributeInstance most = wearer.getAttribute(Attribute.MAX_HEALTH);
@@ -163,7 +198,7 @@ public final class HealthBarService {
                     made.setTeleportDuration((int) FOLLOW_TICKS);
                 });
                 mine.put(style, bar);
-            } else {
+            } else if (!still) {
                 bar.teleport(at);
             }
             String text = rule.text(style, wearer.getHealth(), top);
@@ -172,27 +207,44 @@ public final class HealthBarService {
                 bar.text(MiniMessage.miniMessage().deserialize(text));
             }
         }
+        if (!still) {
+            spots.put(id, new Spot(at.getWorld().getUID(), at.getX(), at.getY(), at.getZ()));
+        }
     }
 
-    /** On the viewer's thread: shows the bars near them in their style if they want them, hides every other. */
-    private void sight(Player viewer) {
+    /**
+     * On the viewer's thread: shows the bars near them in their style if they want them, hides every other.
+     * Only the bars in the grid cells around the viewer and those shown last round are looked at.
+     */
+    private void sight(Player viewer, BarGrid<Bar> grid) {
         boolean on = wants().isOn(viewer);
         HealthStyle mine = style(viewer);
         double range = settings.get().range();
-        bars.forEach((wearer, styles) -> styles.forEach((style, bar) -> {
-            if (!bar.isValid()) {
-                return;
+        Location at = viewer.getLocation();
+        Set<TextDisplay> now = new HashSet<>();
+        if (on) {
+            List<Bar> candidates = grid.near(viewer.getWorld().getUID(), at.getX(), at.getZ(), range);
+            for (Bar bar : candidates) {
+                TextDisplay display = bar.display();
+                if (bar.style() != mine || !display.isValid() || bar.wearer().equals(viewer.getUniqueId())
+                        || display.getWorld() != viewer.getWorld()
+                        || display.getLocation().distanceSquared(at) > range * range || !seenBy(viewer, bar.wearer())) {
+                    continue;
+                }
+                now.add(display);
+                if (!viewer.canSee(display)) {
+                    viewer.showEntity(plugin, display);
+                }
             }
-            boolean should = on && style == mine && !wearer.equals(viewer.getUniqueId())
-                    && bar.getWorld() == viewer.getWorld()
-                    && bar.getLocation().distanceSquared(viewer.getLocation()) <= range * range
-                    && seenBy(viewer, wearer);
-            if (should && !viewer.canSee(bar)) {
-                viewer.showEntity(plugin, bar);
-            } else if (!should && viewer.canSee(bar)) {
-                viewer.hideEntity(plugin, bar);
+        }
+        Set<TextDisplay> was = shown.put(viewer.getUniqueId(), now);
+        if (was != null) {
+            for (TextDisplay display : new ArrayList<>(was)) {
+                if (!now.contains(display) && display.isValid() && viewer.canSee(display)) {
+                    viewer.hideEntity(plugin, display);
+                }
             }
-        }));
+        }
     }
 
     /**
@@ -211,12 +263,14 @@ public final class HealthBarService {
 
     /** A wearer gone for good: its bar too. */
     public void forget(UUID wearer) {
-        lastHit.remove(wearer);
+        unhit(wearer);
+        shown.remove(wearer);
         remove(wearer);
     }
 
     private void remove(UUID wearer) {
         drawn.remove(wearer);
+        spots.remove(wearer);
         Map<HealthStyle, TextDisplay> gone = bars.remove(wearer);
         if (gone != null) {
             gone.values().forEach(this::remove);
@@ -238,7 +292,10 @@ public final class HealthBarService {
         }));
         bars.clear();
         drawn.clear();
+        spots.clear();
+        shown.clear();
         lastHit.clear();
+        cap.clear();
     }
 
     /** A health line as this player would see it — what the style command shows as its example. */
