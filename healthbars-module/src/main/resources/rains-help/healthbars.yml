@@ -28,7 +28,7 @@ sections:
     text: |
       There are two looks. <white>Hearts</white> shows a heart and the number of health points, like <red>❤</red> <green>20</green>. <white>Bar</white> shows ten blocks and the percent left.
       {cmd:/healthbars style} flips between them, or name one: {cmd:/healthbars style hearts}, {cmd:/healthbars style bar}. I show you an example as soon as you change it.
-      Until you pick, you get <white>{setting:healthbars:default-style}</white>.
+      Until you pick, you get <white>{setting:healthbars:default-style}</white>. Under a player's name the line floats {setting:healthbars:player-height} hundredths of a block above their head.
   - question: Over which mobs do I see one?
     title: Mobs
     when: healthbars:mobs

@@ -49,8 +49,6 @@ public final class HealthBarService {
     private static final int SIGHT_EVERY = 5;
     /** Just above the head, under where the name is drawn. */
     private static final double ABOVE_HEAD = 0.15;
-    /** A player's name tag starts where a mob's bar would be: theirs sits right on the head, under the tag. */
-    private static final double ABOVE_A_PLAYERS_HEAD = 0.0;
     private static final NamespacedKey STYLE = new NamespacedKey(PlayerSwitch.NAMESPACE, "rainshealthbars-style");
 
     private final Plugin plugin;
@@ -172,7 +170,7 @@ public final class HealthBarService {
             return;
         }
         Location at = wearer.getLocation().add(0, wearer.getHeight()
-                + (wearer instanceof Player ? ABOVE_A_PLAYERS_HEAD : ABOVE_HEAD), 0);
+                + (wearer instanceof Player ? settings.get().playerLift() : ABOVE_HEAD), 0);
         Spot before = spots.get(id);
         boolean still = before != null && before.sameAs(at.getWorld().getUID(), at.getX(), at.getY(), at.getZ());
         Map<HealthStyle, TextDisplay> mine = bars.computeIfAbsent(id, key -> new ConcurrentHashMap<>());

@@ -26,7 +26,8 @@
         <!-- 0.1.0: health under players' names and over hurt mobs; /healthbars (/hp) switches them for yourself.
              0.1.1: a bar shows only to who can see its wearer, never for an invisible one. -->
         <!-- 0.1.2: a player's bar sits right on the head, below the name tag it clipped. -->
-        <plugin.version>0.3.0</plugin.version>
+        <!-- 0.4.0: a player's health line sits under their name (setting player-height, default 25 hundredths of a block), not on their head. -->
+        <plugin.version>0.4.0</plugin.version>
     </properties>
 
     <dependencies>

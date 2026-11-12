@@ -50,7 +50,23 @@ public record HealthBarsSettings(
         @Describe("HEARTS: a heart and the health. BAR: a line and the percent. Each player picks their own "
                 + "with /healthbars style.")
         @Key("default-style")
-        HealthStyle defaultStyle) {
+        HealthStyle defaultStyle,
 
-    public static final HealthBarsSettings DEFAULTS = new HealthBarsSettings(true, true, true, 32, 15, 8, HealthStyle.HEARTS);
+        @In("healthbars") @Title("Height under players' names, hundredths of a block") @Range(min = 0, max = 100)
+        @Describe("How far above a player's head their health line floats. 0 sits on the head; around 25 is "
+                + "right under the name. Changes at once.")
+        @Key("player-height")
+        int playerHeight) {
+
+    public static final HealthBarsSettings DEFAULTS = new HealthBarsSettings(true, true, true, 32, 15, 8, HealthStyle.HEARTS,
+            25);
+
+    /** Blocks above a player's head, clamped. */
+    public double playerLift() {
+        return Math.max(0, Math.min(100, playerHeight)) / 100.0;
+    }
+
+    public HealthBarsSettings withPlayerHeight(int hundredths) {
+        return new HealthBarsSettings(players, mobs, onByDefault, range, mobSeconds, mobCap, defaultStyle, hundredths);
+    }
 }
