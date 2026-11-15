@@ -33,7 +33,6 @@ public final class HealthBarsModule implements FlexModule {
         SettingsStore<HealthBarsSettings> settings = context.settings(HealthBarsSettings.class, HealthBarsSettings.DEFAULTS);
         context.core().messages().defineFrom(HealthBarsModule.class.getResourceAsStream("messages.yml"),
                 context.chat().brand()::chatPrefix);
-        context.core().messages().seriousFrom(HealthBarsModule.class.getResourceAsStream("messages-serious.yml"));
         bars = new HealthBarService(context.plugin(), settings::current, context.core().vanish());
         context.listener(new HealthBarsListener(bars));
         var timer = Scheduling.globalTimer(context.plugin(), HealthBarService.FOLLOW_TICKS, HealthBarService.FOLLOW_TICKS,
