@@ -21,8 +21,8 @@ public record HealthBarsSettings(
         boolean players,
 
         @In("healthbars") @Title("Health over hurt mobs")
-        @Describe("A mob's health shows while it is hurt and for a while after its last hit — not over every "
-                + "animal in sight.")
+        @Describe("A mob's health shows while it is hurt and for a while after its last hit. Mobs that "
+                + "nobody hit have no bar.")
         @Key("mobs")
         boolean mobs,
 
@@ -41,8 +41,8 @@ public record HealthBarsSettings(
         int mobSeconds,
 
         @In("healthbars") @Title("Mob bars per chunk") @Range(min = 1, max = 64)
-        @Describe("At most this many hit mobs wear a bar in one chunk at a time — a mob farm does not fill the "
-                + "world with floating text.")
+        @Describe("At most this many hit mobs have a bar in one chunk at a time, so a mob farm does not fill "
+                + "the world with floating text.")
         @Key("mob-cap")
         int mobCap,
 

@@ -20,7 +20,7 @@ public final class HealthBarsCommands {
         return List.of(ModuleCommand.of("healthbars", "Shows or hides the health bars over players and mobs, for you",
                         new HealthBarsCommand(HealthBarsCommands::require))
                 .aliased("hp")
-                .taking("(nothing) — switches them", "on | off | status", "style [hearts | bar] — how they look"));
+                .taking("(nothing): switches them", "on | off | status", "style [hearts | bar]: how they look"));
     }
 
     static void ready(HealthBarsServices live) {
