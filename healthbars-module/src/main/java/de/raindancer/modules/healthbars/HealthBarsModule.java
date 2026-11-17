@@ -17,7 +17,7 @@ import java.util.List;
  */
 public final class HealthBarsModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("healthbars", "Health Bars", "0.4.1")
+    private static final ModuleInfo INFO = ModuleInfo.of("healthbars", "Health Bars", "0.5.0")
             .describedAs("Health under players' names and over hurt mobs; each player switches it for themselves")
             .by("Raindancer118");
 
@@ -40,7 +40,21 @@ public final class HealthBarsModule implements FlexModule {
         if (timer != null) {
             context.closeWith(timer::cancel);
         }
-        HealthBarsCommands.ready(new HealthBarsServices(context.plugin().getServer(), context.core().messages(), bars));
+        HealthBarsServices services = new HealthBarsServices(context.plugin().getServer(), context.core().messages(), bars);
+        HealthBarsCommands.ready(services);
+        // Both settings are on /preferences (Core 2.103.0); /healthbars stays as the shortcut.
+        try {
+            de.raindancer.core.ui.preference.Preference shown = HealthBarsPreferences.shown(() -> services, settings::current);
+            de.raindancer.core.ui.preference.Preference style = HealthBarsPreferences.style(() -> services, settings::current);
+            de.raindancer.core.ui.preference.Preferences.offer(context.plugin(), shown);
+            de.raindancer.core.ui.preference.Preferences.offer(context.plugin(), style);
+            context.closeWith(() -> {
+                de.raindancer.core.ui.preference.Preferences.withdraw(shown);
+                de.raindancer.core.ui.preference.Preferences.withdraw(style);
+            });
+        } catch (LinkageError olderCore) {
+            context.log().info("RainsCore is older than 2.103.0: health bars are not on /preferences.");
+        }
         context.log().info("Health bars are up.");
     }
 
