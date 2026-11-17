@@ -29,7 +29,7 @@ public final class HealthBarsPreferences {
 
     public static Preference style(Supplier<HealthBarsServices> services, Supplier<HealthBarsSettings> settings) {
         List<String> options = List.of("Hearts", "Bar");
-        return Preference.choice("healthbars:style", GROUP, "Style", "How health is drawn: a heart and the number, or a bar and the percent.",
+        return Preference.choice("healthbars:style", GROUP, "Health bar style", "How health is drawn: a heart and the number, or a bar and the percent.",
                         options, player -> services.get().bars().style(player).ordinal(),
                         (player, index) -> {
                             HealthBarsServices live = services.get();
